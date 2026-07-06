@@ -1,23 +1,20 @@
 {
   "name": "protractor",
-  "version": "1.0.0",
   "private": true,
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "framer-motion": "^11.11.9",
-    "next": "^15.3.1",
+    "gsap": "^3.12.7",
     "react": "^19.1.0",
-    "react-confetti": "^6.2.1",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17"
+    "@vitejs/plugin-react": "^4.4.1",
+    "vite": "^6.3.5"
   }
 }
