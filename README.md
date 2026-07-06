@@ -30,4 +30,4 @@ npm run build    # production build in dist/
 
 ## Deploy to Vercel
 
-The repo is Vercel-ready out of the box — import it on [vercel.com](https://vercel.com) and the Vite preset handles the rest (build command `vite build`, output `dist`). No configuration needed.
+The repo ships a `vercel.json` that pins the framework to **Vite** (build command `npm run build`, output `dist`), so it deploys correctly even if the Vercel project was previously configured with a different framework preset. Just import the repo on [vercel.com](https://vercel.com) and deploy.
