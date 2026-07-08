@@ -2,8 +2,10 @@
   --bg: #05060f;
   --ink: #eef1ff;
   --ink-dim: rgba(238, 241, 255, 0.6);
-  --cyan: #5eead4;
-  --pink: #ff5da2;
+  /* neon reskin: --cyan now holds neon green (fixed arrow), --pink holds neon yellow (you).
+     Names kept to avoid churn across ~15 usages. */
+  --cyan: #39FF14;
+  --pink: #F2FF1A;
   --gold: #ffd166;
   --violet: #a78bfa;
   --card: rgba(16, 20, 42, 0.6);
@@ -52,9 +54,9 @@ body {
   will-change: transform;
 }
 
-.aurora-cyan   { background: radial-gradient(circle, rgba(94,234,212,0.5), transparent 65%); top: -18vmax; left: -12vmax; }
+.aurora-cyan   { background: radial-gradient(circle, rgba(57,255,20,0.42), transparent 65%); top: -18vmax; left: -12vmax; }
 .aurora-violet { background: radial-gradient(circle, rgba(167,139,250,0.45), transparent 65%); bottom: -20vmax; right: -14vmax; }
-.aurora-pink   { background: radial-gradient(circle, rgba(255,93,162,0.35), transparent 65%); top: 30%; left: 45%; }
+.aurora-pink   { background: radial-gradient(circle, rgba(242,255,26,0.28), transparent 65%); top: 30%; left: 45%; }
 
 .aurora-grid {
   position: absolute;
@@ -217,19 +219,19 @@ body {
   padding: 16px 44px;
   font-size: 1rem;
   color: #06121a;
-  background: linear-gradient(120deg, var(--cyan), #9ef7e8);
-  box-shadow: 0 0 24px rgba(94, 234, 212, 0.45), 0 4px 18px rgba(0,0,0,0.4);
+  background: linear-gradient(120deg, var(--cyan), #b6ff9c);
+  box-shadow: 0 0 24px rgba(57, 255, 20, 0.45), 0 4px 18px rgba(0,0,0,0.4);
 }
 
-.btn-primary:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 0 36px rgba(94, 234, 212, 0.65), 0 6px 22px rgba(0,0,0,0.4); }
+.btn-primary:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 0 36px rgba(57, 255, 20, 0.65), 0 6px 22px rgba(0,0,0,0.4); }
 .btn-primary:active { transform: scale(0.97); }
 
 .btn-lock {
-  background: linear-gradient(120deg, var(--pink), #ff9ecb);
-  color: #2a0616;
-  box-shadow: 0 0 24px rgba(255, 93, 162, 0.45), 0 4px 18px rgba(0,0,0,0.4);
+  background: linear-gradient(120deg, var(--pink), #fbff8a);
+  color: #2a2600;
+  box-shadow: 0 0 24px rgba(242, 255, 26, 0.4), 0 4px 18px rgba(0,0,0,0.4);
 }
-.btn-lock:hover { box-shadow: 0 0 36px rgba(255, 93, 162, 0.65), 0 6px 22px rgba(0,0,0,0.4); }
+.btn-lock:hover { box-shadow: 0 0 36px rgba(242, 255, 26, 0.6), 0 6px 22px rgba(0,0,0,0.4); }
 
 /* intro flash */
 
@@ -253,7 +255,7 @@ body {
   font-size: clamp(5rem, 20vw, 10rem);
   line-height: 1;
   color: var(--ink);
-  text-shadow: 0 0 40px rgba(94, 234, 212, 0.6);
+  text-shadow: 0 0 40px rgba(57, 255, 20, 0.55);
 }
 
 /* play */
@@ -284,28 +286,72 @@ body {
   position: relative;
   width: min(62vmin, 430px);
   aspect-ratio: 1;
+  /* clip stray arrow glow to the dial face (fixes mobile glow bleeding over the callout) */
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .dial { width: 100%; height: 100%; display: block; touch-action: none; }
 .dial-live { cursor: grab; }
 .dial-live:active { cursor: grabbing; }
 
+/* countdown seconds — its own pill below the dial, no longer under the ring */
 .time-readout {
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
   font-variant-numeric: tabular-nums;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--ink-dim);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--border);
 }
 
-.time-low { color: #ff4d6d; font-weight: 700; animation: pulse 0.5s infinite alternate; }
+.time-low { color: #ff4d6d; font-weight: 700; border-color: rgba(255,77,109,0.5); animation: pulse 0.5s infinite alternate; }
 
 @keyframes pulse {
-  from { opacity: 1; transform: translateX(-50%) scale(1); }
-  to   { opacity: 0.7; transform: translateX(-50%) scale(1.12); }
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0.75; transform: scale(1.1); }
+}
+
+/* paused overlay while the tab/app is backgrounded */
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 6, 15, 0.72);
+  backdrop-filter: blur(3px);
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  font-size: clamp(1.4rem, 6vw, 2.2rem);
+  color: var(--ink);
+  z-index: 6;
+}
+
+/* difficulty mode selector on the menu */
+.mode-select { display: flex; gap: 10px; }
+
+.mode-pill {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+  padding: 9px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--ink-dim);
+  background: var(--card);
+  border: 1px solid var(--border);
+  transition: transform 0.15s, color 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.mode-pill:hover { transform: translateY(-1px); color: var(--ink); }
+.mode-pill-active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.35);
 }
 
 .ring-urgent { animation: ringFlash 0.4s infinite alternate; }
@@ -320,7 +366,7 @@ body {
   letter-spacing: 0.08em;
   color: var(--ink);
 }
-.verdict-good { color: var(--cyan); text-shadow: 0 0 28px rgba(94, 234, 212, 0.6); }
+.verdict-good { color: var(--cyan); text-shadow: 0 0 28px rgba(57, 255, 20, 0.55); }
 .verdict-bad { color: #ff4d6d; text-shadow: 0 0 28px rgba(255, 77, 109, 0.5); }
 
 .reveal-screen .dial-wrap { width: min(48vmin, 340px); }
@@ -358,7 +404,7 @@ body {
 .stat-value.gold { color: var(--gold); }
 .stat-value.pink { color: var(--pink); }
 
-.stat-score { border-color: rgba(94, 234, 212, 0.4); box-shadow: 0 0 18px rgba(94, 234, 212, 0.15); }
+.stat-score { border-color: rgba(57, 255, 20, 0.4); box-shadow: 0 0 18px rgba(57, 255, 20, 0.15); }
 .stat-score .stat-value { color: var(--cyan); }
 .stat-denominator { font-size: 0.85rem; color: var(--ink-dim); margin-left: 3px; }
 

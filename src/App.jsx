@@ -6,8 +6,8 @@ import ClickSpark from './components/ClickSpark.jsx'
 import CountUp from './components/CountUp.jsx'
 import Confetti from './components/Confetti.jsx'
 import AngleDial from './components/AngleDial.jsx'
-import { ROUNDS, ROUND_TIME, newTargets, angularError, roundScore, rankFor, roundVerdict } from './logic.js'
-import { sfx, unlock, setMuted, isMuted } from './audio.js'
+import { ROUNDS, ROUND_TIME, MODES, DEFAULT_MODE, newTargets, angularError, roundScore, rankFor, roundVerdict } from './logic.js'
+import { sfx, unlock, setMuted, isMuted, playVoice } from './audio.js'
 
 const rand = (min, max) => min + Math.random() * (max - min)
 
@@ -20,6 +20,10 @@ export default function App() {
   const [guess, setGuess] = useState(90)
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME)
   const [muted, setMutedState] = useState(isMuted())
+  const [mode, setMode] = useState(DEFAULT_MODE)
+  const [paused, setPaused] = useState(false)
+
+  const roundTime = MODES[mode].time
 
   const guessRef = useRef(guess)
   const lockedRef = useRef(false)
@@ -42,13 +46,21 @@ export default function App() {
   }
 
   const beginRound = useCallback(() => {
-    // new random orientation every round: no frame of reference
-    setBase(rand(0, 360))
+    // Easy pins the green arrow to +x; Hard/Ultra randomize orientation (no frame of reference)
+    setBase(MODES[mode].fixedBase ? 0 : rand(0, 360))
     setGuessLive(rand(25, 335))
     lockedRef.current = false
-    setTimeLeft(ROUND_TIME)
+    setTimeLeft(MODES[mode].time)
     setPhase('play')
-  }, [setGuessLive])
+  }, [setGuessLive, mode])
+
+  // Pick a difficulty on the menu; announce it with the robotic voice on change.
+  const selectMode = (id) => {
+    if (id === mode) return
+    setMode(id)
+    sfx.click()
+    playVoice(MODES[id].voice)
+  }
 
   const lockIn = useCallback(() => {
     if (lockedRef.current) return
@@ -70,14 +82,16 @@ export default function App() {
     return () => clearTimeout(t)
   }, [phase, beginRound])
 
-  // countdown timer during play
+  // countdown timer during play — pauses when the tab/app is backgrounded
   useEffect(() => {
     if (phase !== 'play') return
-    const start = performance.now()
     let raf
-    let lastWhole = ROUND_TIME
+    let start = performance.now()
+    let lastWhole = Math.ceil(roundTime)
+    let hidden = false
+    let hidAt = 0
     const loop = (now) => {
-      const left = Math.max(0, ROUND_TIME - (now - start) / 1000)
+      const left = Math.max(0, roundTime - (now - start) / 1000)
       setTimeLeft(left)
       const whole = Math.ceil(left)
       if (whole !== lastWhole) {
@@ -87,9 +101,27 @@ export default function App() {
       if (left <= 0) lockIn()
       else raf = requestAnimationFrame(loop)
     }
+    const onVis = () => {
+      if (document.hidden) {
+        hidden = true
+        hidAt = performance.now()
+        cancelAnimationFrame(raf)
+        setPaused(true)
+      } else if (hidden) {
+        hidden = false
+        start += performance.now() - hidAt // exclude the time spent away
+        setPaused(false)
+        raf = requestAnimationFrame(loop)
+      }
+    }
+    document.addEventListener('visibilitychange', onVis)
     raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [phase, lockIn])
+    return () => {
+      cancelAnimationFrame(raf)
+      document.removeEventListener('visibilitychange', onVis)
+      setPaused(false)
+    }
+  }, [phase, lockIn, roundTime])
 
   // reveal jingle + auto-advance
   useEffect(() => {
@@ -169,10 +201,23 @@ export default function App() {
             <div className="howto" data-animate>
               <div className="howto-item"><span className="k">🎯</span><span className="t">We name an angle — like <strong>270°</strong></span></div>
               <div className="howto-item">
-                <span className="k">↺</span><span className="t">Drag the <span className="pink">pink arrow</span> counter-clockwise from the <span className="cyan">cyan arrow</span> until the gap <em>feels</em> right</span>
+                <span className="k">↺</span><span className="t">Drag the <span className="pink">yellow arrow</span> counter-clockwise from the <span className="cyan">green arrow</span> until the gap <em>feels</em> right</span>
               </div>
               <div className="howto-item"><span className="k">🚫</span><span className="t">No ticks. No numbers. No frame of reference. Pure vibes</span></div>
-              <div className="howto-item"><span className="k">⏱️</span><span className="t">{ROUND_TIME} seconds × {ROUNDS} rounds — up to 10.00 points each for accuracy</span></div>
+              <div className="howto-item"><span className="k">⏱️</span><span className="t">{roundTime} seconds × {ROUNDS} rounds — up to 10.00 points each for accuracy</span></div>
+            </div>
+
+            <div className="mode-select" data-animate role="group" aria-label="Difficulty">
+              {Object.values(MODES).map((m) => (
+                <button
+                  key={m.id}
+                  className={`mode-pill ${mode === m.id ? 'mode-pill-active' : ''}`}
+                  onClick={() => selectMode(m.id)}
+                  aria-pressed={mode === m.id}
+                >
+                  {m.label}
+                </button>
+              ))}
             </div>
 
             <button className="btn btn-primary" data-animate onClick={startGame}>
@@ -204,10 +249,12 @@ export default function App() {
                 onChange={setGuessLive}
                 interactive
                 reveal={null}
-                timeFrac={timeLeft / ROUND_TIME}
+                timeFrac={timeLeft / roundTime}
               />
-              <div className={`time-readout ${timeLeft <= 3 ? 'time-low' : ''}`}>{timeLeft.toFixed(1)}s</div>
+              {paused && <div className="pause-overlay">PAUSED</div>}
             </div>
+
+            <div className={`time-readout ${timeLeft <= 3 ? 'time-low' : ''}`} data-animate>{timeLeft.toFixed(1)}s</div>
 
             <button className="btn btn-primary btn-lock" data-animate onClick={lockIn}>
               LOCK IT IN
