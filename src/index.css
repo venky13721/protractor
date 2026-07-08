@@ -183,21 +183,37 @@ body {
 }
 .tagline em { color: var(--cyan); font-style: normal; }
 
-.howto {
+.demo {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 18px;
-  padding: 20px 24px;
+  padding: 16px 16px 18px;
   backdrop-filter: blur(12px);
   max-width: 520px;
+  width: 100%;
 }
 
-.howto-item { display: flex; gap: 12px; align-items: baseline; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.45; }
-.howto-item .k { flex: 0 0 auto; }
-.howto-item strong, .howto-item em { color: var(--ink); font-style: normal; }
+.demo-gif {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  border-radius: 14px;
+  aspect-ratio: 520 / 500;
+}
+
+.demo-caption {
+  color: var(--ink-dim);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  text-align: center;
+  max-width: 460px;
+}
+.demo-caption em { color: var(--ink); font-style: normal; }
 
 .pink { color: var(--pink); font-weight: 700; }
 .cyan { color: var(--cyan); font-weight: 700; }
@@ -495,6 +511,7 @@ body {
   .screen { gap: 14px; }
   .dial-wrap { width: min(54vmin, 360px); }
   .reveal-screen .dial-wrap { width: min(40vmin, 260px); }
-  .howto { padding: 14px 18px; gap: 8px; }
-  .howto-item { font-size: 0.85rem; }
+  .demo { padding: 12px 12px 14px; gap: 8px; }
+  .demo-gif { max-width: 320px; }
+  .demo-caption { font-size: 0.82rem; }
 }
