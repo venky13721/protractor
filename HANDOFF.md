@@ -26,7 +26,7 @@ _Phase 2 (multiplayer) is documentation-only in this pass; not implemented._
 | 6 | Confetti + ClickSpark colors | ✅ | both point at COLORS (green/yellow/gold/violet/blue). |
 | 7 | Higgsfield: 3 mode voices | ✅ | Generated 3 clips (Sterling voice). CDN download blocked by egress policy → MODES point at hosted URLs; fetch-voices.sh provided to self-host. |
 | 8 | README (Phase 1 + Phase 2) | ✅ | Rewrote: updated gameplay, tunable consts, Phase 2 seeded-URL + Upstash arch. |
-| 9 | Verify (build+browser) + commit + push | 🟡 | |
+| 9 | Verify + commit + push + merge | ✅ | build ✓; scoring endpoints ✓ (0→10, 45→0.95, ≥90→0). PR #5 merged to main. |
 
 ## Decisions locked
 - Colors: fixed arrow = neon green `#39FF14`, you = neon yellow `#F2FF1A`, target stays gold.
@@ -49,3 +49,10 @@ _Phase 2 (multiplayer) is documentation-only in this pass; not implemented._
 - Step 7 ✅ (with caveat): generated EASY/HARD/ULTRA clips via Higgsfield seed_audio, voice "Sterling" (deep male). Cost 0.1cr each. NOTE: pitch/speech rate params must be integers (used defaults). Could NOT download the mp3s — the CDN host (d8j0ntlcm91z4.cloudfront.net) is blocked by org egress policy (403, must not route around). Workaround: MODES[].voice point at the hosted CDN URLs (work in a real browser on deploy), plus public/voice/fetch-voices.sh for the owner to self-host + a README note to flip to local paths.
 - Step 8 ✅ README updated (voice section reflects hosted-URL approach).
 - Starting step 9: build + browser verify + commit + push.
+- Step 9 ✅ `npm run build` clean (vite, 40 modules). Verified roundScore endpoints via node: 0°→10.00, 1°→9.51, 10°→6.02, 20°→3.61, 45°→0.95, ≥90°→0. Committed c48fad7, pushed branch, opened PR #5, merged to main (6342cae). Browser smoke test skipped per owner ("just merge, I'll test").
+- DONE. Phase 1 shipped. Phase 2 is documented in README (not built).
+
+## Owner follow-ups
+- Test the deployed build. Voices load from Higgsfield CDN URLs; run `bash public/voice/fetch-voices.sh` then switch MODES[].voice to `/voice/*.mp3` to self-host.
+- Tune knobs in `src/logic.js` if desired: MODES times, SCORE_DECAY/SCORE_ZERO_DEG, COLORS.
+- Say the word to start Phase 2 (multiplayer) — plan is in README.
