@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { sfx } from '../audio.js'
+import { COLORS } from '../logic.js'
 
 const CX = 200
 const CY = 200
@@ -8,6 +9,8 @@ const RAY = 148 // arrow length
 const RING = 184 // timer ring radius
 const ARC_TARGET = 118
 const ARC_GUESS = 92
+const NOTCH = 10       // degrees per audible tick (sparser than before)
+const TICK_MIN_MS = 45 // min gap between ticks so fast drags don't machine-gun
 
 // Visual angles are degrees counter-clockwise from the +x axis.
 // Screen y grows downward, hence the minus on sin.
@@ -56,6 +59,7 @@ export default function AngleDial({ base, guess, onChange, interactive, reveal, 
   const svgRef = useRef(null)
   const dragging = useRef(false)
   const lastBucket = useRef(null)
+  const lastTick = useRef(0)
   const targetArcRef = useRef(null)
   const guessArcRef = useRef(null)
 
@@ -69,10 +73,14 @@ export default function AngleDial({ base, guess, onChange, interactive, reveal, 
   const applyPointer = (e) => {
     const theta = angleFromEvent(e)
     const g = ((theta - base) % 360 + 360) % 360
-    const bucket = Math.floor(g / 5)
+    const bucket = Math.floor(g / NOTCH)
     if (bucket !== lastBucket.current) {
       lastBucket.current = bucket
-      sfx.ratchet()
+      const now = performance.now()
+      if (now - lastTick.current > TICK_MIN_MS) {
+        lastTick.current = now
+        sfx.ratchet()
+      }
     }
     onChange(g)
   }
@@ -107,7 +115,7 @@ export default function AngleDial({ base, guess, onChange, interactive, reveal, 
   const ringLen = 2 * Math.PI * RING
   const frac = Math.min(Math.max(timeFrac ?? 1, 0), 1)
   const urgent = frac < 0.3
-  const ringColor = urgent ? '#ff4d6d' : frac < 0.6 ? '#ffb347' : '#5eead4'
+  const ringColor = urgent ? '#ff4d6d' : frac < 0.6 ? '#ffb347' : COLORS.green
   const moveDeg = base + guess
 
   return (
@@ -143,17 +151,17 @@ export default function AngleDial({ base, guess, onChange, interactive, reveal, 
       {/* reveal arcs: gold = the target, pink = the guess */}
       {reveal && (
         <g fill="none">
-          <path ref={targetArcRef} d={arcPath(base, reveal.target, ARC_TARGET)} stroke="#ffd166" strokeWidth="6" strokeLinecap="round" opacity="0" style={{ filter: 'drop-shadow(0 0 8px #ffd166)' }} />
-          <path ref={guessArcRef} d={arcPath(base, guess, ARC_GUESS)} stroke="#ff5da2" strokeWidth="6" strokeLinecap="round" opacity="0" style={{ filter: 'drop-shadow(0 0 8px #ff5da2)' }} />
+          <path ref={targetArcRef} d={arcPath(base, reveal.target, ARC_TARGET)} stroke={COLORS.gold} strokeWidth="6" strokeLinecap="round" opacity="0" style={{ filter: `drop-shadow(0 0 8px ${COLORS.gold})` }} />
+          <path ref={guessArcRef} d={arcPath(base, guess, ARC_GUESS)} stroke={COLORS.yellow} strokeWidth="6" strokeLinecap="round" opacity="0" style={{ filter: `drop-shadow(0 0 8px ${COLORS.yellow})` }} />
         </g>
       )}
 
       {/* the ghost arrow marking where the target actually was */}
-      {reveal && <Arrow deg={base + reveal.target} color="#ffd166" ghost />}
+      {reveal && <Arrow deg={base + reveal.target} color={COLORS.gold} ghost />}
 
-      {/* fixed + movable arrows */}
-      <Arrow deg={base} color="#5eead4" />
-      <Arrow deg={moveDeg} color="#ff5da2" />
+      {/* fixed (green) + movable (yellow) arrows */}
+      <Arrow deg={base} color={COLORS.green} />
+      <Arrow deg={moveDeg} color={COLORS.yellow} />
 
       {/* hub */}
       <circle cx={CX} cy={CY} r="10" fill="#0b1024" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />

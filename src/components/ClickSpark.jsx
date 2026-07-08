@@ -39,7 +39,7 @@ export default function ClickSpark() {
         const len = 12 * (1 - t)
         const x1 = s.x + Math.cos(s.angle) * dist
         const y1 = s.y + Math.sin(s.angle) * dist
-        ctx.strokeStyle = `rgba(94, 234, 212, ${1 - t})`
+        ctx.strokeStyle = `rgba(57, 255, 20, ${1 - t})`
         ctx.lineWidth = 2
         ctx.beginPath()
         ctx.moveTo(x1, y1)

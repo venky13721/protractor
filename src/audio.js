@@ -19,6 +19,19 @@ export function isMuted() { return muted }
 // Call from a user gesture so the context is allowed to start.
 export function unlock() { ac() }
 
+// Spoken mode-announce clips (real audio files, not synthesized). Cancels any
+// in-flight clip so rapid mode switches don't overlap. Honors the mute flag.
+let currentVoice = null
+export function playVoice(url) {
+  if (muted || !url) return
+  try {
+    if (currentVoice) { currentVoice.pause(); currentVoice.currentTime = 0 }
+    currentVoice = new Audio(url)
+    currentVoice.volume = 0.95
+    currentVoice.play().catch(() => {})
+  } catch { /* audio not available */ }
+}
+
 function tone({ freq = 440, type = 'sine', dur = 0.2, vol = 0.2, at = 0, glide = null, curve = 'exp' }) {
   const c = ac()
   if (!c || muted) return
@@ -68,9 +81,10 @@ export const sfx = {
     tone({ freq: 1440, type: 'sine', dur: 0.06, vol: 0.08, at: 0.02 })
   },
 
-  // Tiny ratchet blip while dragging the arrow
+  // Soft, low tick while dragging the arrow — gentle, not shrill.
+  // (Fired sparsely from the dial: wider notch + time throttle.)
   ratchet() {
-    tone({ freq: 2200 + Math.random() * 300, type: 'square', dur: 0.018, vol: 0.028, curve: 'lin' })
+    tone({ freq: 150 + Math.random() * 30, type: 'triangle', dur: 0.022, vol: 0.02, curve: 'lin' })
   },
 
   // Round intro whoosh + hit
