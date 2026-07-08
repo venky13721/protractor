@@ -198,14 +198,18 @@ export default function App() {
             </h1>
             <p className="tagline" data-animate>How well do you <em>really</em> know your angles?</p>
 
-            <div className="howto" data-animate>
-              <div className="howto-item"><span className="k">🎯</span><span className="t">We name an angle — like <strong>270°</strong></span></div>
-              <div className="howto-item">
-                <span className="k">↺</span><span className="t">Drag the <span className="pink">yellow arrow</span> counter-clockwise from the <span className="cyan">green arrow</span> until the gap <em>feels</em> right</span>
-              </div>
-              <div className="howto-item"><span className="k">🚫</span><span className="t">No ticks. No numbers. No frame of reference. Pure vibes</span></div>
-              <div className="howto-item"><span className="k">⏱️</span><span className="t">{roundTime} seconds × {ROUNDS} rounds — up to 10.00 points each for accuracy</span></div>
-            </div>
+            <figure className="demo" data-animate>
+              <img
+                className="demo-gif"
+                src="/demo.gif"
+                width="520"
+                height="500"
+                alt="Demo: an angle is named, then you drag the yellow arrow counter-clockwise from the green arrow until the gap feels right, before time runs out."
+              />
+              <figcaption className="demo-caption">
+                Drag the <span className="pink">yellow arrow</span> counter-clockwise from the <span className="cyan">green arrow</span> until the gap <em>feels</em> right — no ticks, no numbers, {roundTime}s × {ROUNDS} rounds.
+              </figcaption>
+            </figure>
 
             <div className="mode-select" data-animate role="group" aria-label="Difficulty">
               {Object.values(MODES).map((m) => (
