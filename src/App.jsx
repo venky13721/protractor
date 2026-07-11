@@ -6,22 +6,35 @@ import ClickSpark from './components/ClickSpark.jsx'
 import CountUp from './components/CountUp.jsx'
 import Confetti from './components/Confetti.jsx'
 import AngleDial from './components/AngleDial.jsx'
-import { ROUNDS, ROUND_TIME, MODES, DEFAULT_MODE, newTargets, angularError, roundScore, rankFor, roundVerdict } from './logic.js'
+import { ROUNDS, ROUND_TIME, MODES, DEFAULT_MODE, angularError, rankFor, roundScore, roundVerdict, gamePlan, randomSeed, encodeSeed, decodeSeed } from './logic.js'
+import { submitScore, fetchBoard, cleanName, MAX_NAME } from './leaderboard.js'
 import { sfx, unlock, setMuted, isMuted, playVoice } from './audio.js'
 
-const rand = (min, max) => min + Math.random() * (max - min)
+// A shared game arrives as ?c=<seed>&m=<mode> — same seed, same 5 angles.
+function parseChallenge() {
+  const params = new URLSearchParams(window.location.search)
+  const seed = decodeSeed(params.get('c'))
+  if (seed === null) return null
+  const m = params.get('m')
+  return { seed, mode: MODES[m] ? m : DEFAULT_MODE }
+}
 
 export default function App() {
-  const [phase, setPhase] = useState('menu') // menu | intro | play | reveal | results
+  const [phase, setPhase] = useState('menu') // menu | intro | play | reveal | results | board
   const [round, setRound] = useState(0)
-  const [targets, setTargets] = useState([])
+  const [plan, setPlan] = useState([]) // { target, base, start } per round, from the seed
   const [results, setResults] = useState([]) // { target, guess, score }
   const [base, setBase] = useState(0)
   const [guess, setGuess] = useState(90)
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME)
   const [muted, setMutedState] = useState(isMuted())
-  const [mode, setMode] = useState(DEFAULT_MODE)
+  const [challenge, setChallenge] = useState(parseChallenge)
+  const [mode, setMode] = useState(challenge ? challenge.mode : DEFAULT_MODE)
   const [paused, setPaused] = useState(false)
+  const [seed, setSeed] = useState(null)
+  const [name, setName] = useState(() => localStorage.getItem('protractor-name') || '')
+  const [board, setBoard] = useState(null) // { entries, rank, local } once loaded
+  const [copied, setCopied] = useState(false)
 
   const roundTime = MODES[mode].time
 
@@ -36,28 +49,42 @@ export default function App() {
 
   // ---- phase transitions -------------------------------------------------
 
-  const startGame = () => {
+  const launch = (s) => {
     unlock()
     sfx.click()
-    setTargets(newTargets())
+    setSeed(s)
+    setPlan(gamePlan(s, mode))
     setResults([])
     setRound(0)
+    setBoard(null)
+    setCopied(false)
     setPhase('intro')
   }
 
+  // An accepted challenge starts with its shared seed so everyone gets the
+  // same angles; otherwise roll a fresh seed (which becomes shareable after).
+  const startGame = () => launch(challenge ? challenge.seed : randomSeed())
+
   const beginRound = useCallback(() => {
-    // Easy pins the green arrow to +x; Hard/Ultra randomize orientation (no frame of reference)
-    setBase(MODES[mode].fixedBase ? 0 : rand(0, 360))
-    setGuessLive(rand(25, 335))
+    // Everything about the round comes from the seeded plan, so a shared
+    // seed replays the identical game (Easy pins the green arrow to +x).
+    const r = plan[round]
+    setBase(r.base)
+    setGuessLive(r.start)
     lockedRef.current = false
     setTimeLeft(MODES[mode].time)
     setPhase('play')
-  }, [setGuessLive, mode])
+  }, [setGuessLive, plan, round, mode])
 
   // Pick a difficulty on the menu; announce it with the robotic voice on change.
+  // Switching modes abandons an accepted challenge — its seed is mode-specific.
   const selectMode = (id) => {
     if (id === mode) return
     setMode(id)
+    if (challenge) {
+      setChallenge(null)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
     sfx.click()
     playVoice(MODES[id].voice)
   }
@@ -67,12 +94,12 @@ export default function App() {
     lockedRef.current = true
     sfx.lock()
     setResults((prev) => {
-      const target = targets[prev.length]
+      const target = plan[prev.length].target
       const g = guessRef.current
       return [...prev, { target, guess: g, score: roundScore(target, g) }]
     })
     setTimeout(() => setPhase('reveal'), 380)
-  }, [targets])
+  }, [plan])
 
   // intro flash -> play
   useEffect(() => {
@@ -166,10 +193,59 @@ export default function App() {
     if (!m) sfx.click()
   }
 
+  // ---- multiplayer: share link + leaderboard ------------------------------
+
+  const shareUrl = seed !== null
+    ? `${window.location.origin}${window.location.pathname}?c=${encodeSeed(seed)}&m=${mode}`
+    : ''
+
+  const copyChallenge = async () => {
+    sfx.click()
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+    } catch {
+      // clipboard API unavailable (http / old browser) — legacy fallback
+      const ta = document.createElement('textarea')
+      ta.value = shareUrl
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2200)
+  }
+
+  // Results → leaderboard screen, submitting the score first if a name was given.
+  const goToBoard = async (submit) => {
+    sfx.click()
+    const total = results.reduce((s, r) => s + r.score, 0)
+    const player = cleanName(name)
+    setBoard(null)
+    setPhase('board')
+    if (submit && player) {
+      localStorage.setItem('protractor-name', player)
+      setBoard(await submitScore({ seed, mode, name: player, total: Math.round(total * 100) / 100 }))
+    } else {
+      setBoard(await fetchBoard({ seed, mode }))
+    }
+  }
+
+  const playAgain = () => {
+    // Always a fresh seed — replaying memorized angles would poison the
+    // board. Leaving a challenge also cleans its params out of the URL.
+    if (challenge) {
+      setChallenge(null)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+    launch(randomSeed())
+  }
+
   // ---- render ------------------------------------------------------------
 
   const lastResult = results[results.length - 1]
   const total = results.reduce((s, r) => s + r.score, 0)
+  const playerName = cleanName(name)
 
   return (
     <div className="app">
@@ -197,6 +273,13 @@ export default function App() {
               <ShinyText speed={3.5}>PROTRACTOR</ShinyText>
             </h1>
             <p className="tagline" data-animate>How well do you <em>really</em> know your angles?</p>
+
+            {challenge && (
+              <div className="challenge-banner" data-animate>
+                ⚔️ <b>CHALLENGE ACCEPTED</b> — you'll play the exact same {ROUNDS} angles as your rival
+                on <b>{MODES[challenge.mode].label}</b>. Beat their score!
+              </div>
+            )}
 
             <figure className="demo" data-animate>
               <img
@@ -243,7 +326,7 @@ export default function App() {
           <section className="screen play-screen">
             <div className="target-callout" data-animate>
               <span className="target-label">MAKE THIS ANGLE</span>
-              <span className="target-value">{targets[round]}°</span>
+              <span className="target-value">{plan[round]?.target}°</span>
             </div>
 
             <div className="dial-wrap" data-animate>
@@ -335,9 +418,73 @@ export default function App() {
               ))}
             </div>
 
-            <button className="btn btn-primary" data-animate onClick={startGame}>
-              PLAY AGAIN
+            <form
+              className="lb-join"
+              data-animate
+              onSubmit={(e) => { e.preventDefault(); if (playerName) goToBoard(true) }}
+            >
+              <input
+                className="name-input"
+                type="text"
+                value={name}
+                maxLength={MAX_NAME}
+                placeholder="YOUR NAME"
+                aria-label="Your name for the leaderboard"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <button className="btn btn-primary btn-join" type="submit" disabled={!playerName}>
+                JOIN LEADERBOARD
+              </button>
+            </form>
+
+            <button className="btn-ghost" data-animate onClick={() => goToBoard(false)}>
+              skip → just show the board
             </button>
+          </section>
+        )}
+
+        {phase === 'board' && (
+          <section className="screen board-screen">
+            <p className="results-kicker" data-animate>LEADERBOARD</p>
+            <div className="board-sub" data-animate>
+              challenge <span className="board-seed">#{encodeSeed(seed ?? 0)}</span> · {MODES[mode].label}
+              {board?.local && <span className="board-local"> · this device only</span>}
+            </div>
+
+            <div className="board" data-animate>
+              {!board && <div className="board-empty">loading…</div>}
+              {board && board.entries.length === 0 && (
+                <div className="board-empty">No scores yet — you could be first!</div>
+              )}
+              {board?.entries.map((e, i) => (
+                <div
+                  className={`board-row ${e.name === playerName ? 'board-row-you' : ''}`}
+                  key={`${e.name}-${i}`}
+                >
+                  <span className="board-rank">{['🥇', '🥈', '🥉'][i] || `${i + 1}`}</span>
+                  <span className="board-name">{e.name}</span>
+                  <span className="board-score">{e.score.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+
+            {board?.rank != null && (
+              <p className="board-yourank" data-animate>
+                You're <b>#{board.rank}</b> on this challenge
+              </p>
+            )}
+
+            <div className="share-row" data-animate>
+              <button className="btn btn-primary btn-share" onClick={copyChallenge}>
+                {copied ? '✓ LINK COPIED!' : '⚔️ CHALLENGE A FRIEND'}
+              </button>
+              <button className="btn btn-lock btn-again" onClick={playAgain}>
+                PLAY AGAIN
+              </button>
+            </div>
+            <p className="share-hint" data-animate>
+              The link replays your exact {ROUNDS} angles — winner takes the board.
+            </p>
           </section>
         )}
       </main>

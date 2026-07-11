@@ -505,6 +505,117 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- multiplayer: challenge + leaderboard ---------- */
+
+/* menu banner shown when the page was opened from a ?c= challenge link */
+.challenge-banner {
+  max-width: 460px;
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink-dim);
+  background: var(--card);
+  border: 1px solid rgba(242, 255, 26, 0.45);
+  border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: 0 0 22px rgba(242, 255, 26, 0.18);
+  backdrop-filter: blur(10px);
+}
+.challenge-banner b { color: var(--pink); }
+
+/* name + join form on the results screen */
+.lb-join { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+.name-input {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 13px 22px;
+  width: 200px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.name-input::placeholder { color: var(--ink-dim); font-weight: 400; }
+.name-input:focus { border-color: var(--cyan); box-shadow: 0 0 16px rgba(57, 255, 20, 0.25); }
+
+.btn-join { padding: 13px 26px; font-size: 0.85rem; }
+.btn-join:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-ghost {
+  background: none;
+  border: none;
+  color: var(--ink-dim);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  transition: color 0.15s;
+}
+.btn-ghost:hover { color: var(--ink); }
+
+/* leaderboard screen */
+.board-sub {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+}
+.board-seed { color: var(--cyan); font-weight: 700; }
+.board-local { color: var(--gold); }
+
+.board {
+  width: 100%;
+  max-width: 420px;
+  max-height: 38vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px 16px;
+  backdrop-filter: blur(12px);
+}
+
+.board-empty { text-align: center; color: var(--ink-dim); font-size: 0.9rem; padding: 14px 0; }
+
+.board-row {
+  display: grid;
+  grid-template-columns: 38px 1fr 70px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  padding: 7px 10px;
+  border-radius: 10px;
+}
+.board-row:nth-child(-n + 3) .board-name { font-weight: 700; }
+
+.board-rank { color: var(--ink-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+.board-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-score { text-align: right; font-weight: 700; color: var(--cyan); font-variant-numeric: tabular-nums; }
+
+.board-row-you {
+  background: rgba(242, 255, 26, 0.08);
+  border: 1px solid rgba(242, 255, 26, 0.45);
+  box-shadow: 0 0 14px rgba(242, 255, 26, 0.15);
+}
+.board-row-you .board-name { color: var(--pink); font-weight: 700; }
+
+.board-yourank { color: var(--ink-dim); font-size: 0.95rem; }
+.board-yourank b { color: var(--pink); }
+
+.share-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.btn-share, .btn-again { padding: 14px 28px; font-size: 0.85rem; }
+
+.share-hint { color: var(--ink-dim); font-size: 0.82rem; text-align: center; }
+
 /* small screens */
 
 @media (max-height: 720px) {
