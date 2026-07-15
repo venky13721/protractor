@@ -21,7 +21,9 @@ function parseChallenge() {
 }
 
 export default function App() {
-  const [phase, setPhase] = useState('menu') // menu | intro | play | reveal | results | board
+  // A challenge link lands on its own screen, not the menu.
+  const [challenge, setChallenge] = useState(parseChallenge)
+  const [phase, setPhase] = useState(challenge ? 'challenge' : 'menu') // menu | challenge | intro | play | reveal | results | board
   const [round, setRound] = useState(0)
   const [plan, setPlan] = useState([]) // { target, base, start } per round, from the seed
   const [results, setResults] = useState([]) // { target, guess, score }
@@ -29,7 +31,6 @@ export default function App() {
   const [guess, setGuess] = useState(90)
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME)
   const [muted, setMutedState] = useState(isMuted())
-  const [challenge, setChallenge] = useState(parseChallenge)
   const [mode, setMode] = useState(challenge ? challenge.mode : DEFAULT_MODE)
   const [players, setPlayers] = useState(challenge ? 'multi' : 'single') // single | multi
   const [paused, setPaused] = useState(false)
@@ -84,12 +85,20 @@ export default function App() {
     window.history.replaceState(null, '', window.location.pathname)
   }
 
-  // While a challenge is active both toggles are locked — the seed is tied
-  // to the mode, and a stray tap must not silently turn the challenge into
-  // a random game. Leaving is explicit, via the banner's ✕.
-  const leaveChallenge = () => {
+  // Decline a challenge from its landing screen → free play on the menu.
+  const exitChallenge = () => {
     sfx.click()
     dropChallenge()
+    setPhase('menu')
+  }
+
+  // Peek at the challenge's board before playing it.
+  const viewChallengeBoard = async () => {
+    sfx.click()
+    setSeed(challenge.seed)
+    setBoard(null)
+    setPhase('board')
+    setBoard(await fetchBoard({ seed: challenge.seed, mode }))
   }
 
   // Pick a difficulty on the menu; announce it with the robotic voice on change.
@@ -307,14 +316,6 @@ export default function App() {
             </h1>
             <p className="tagline" data-animate>How well do you <em>really</em> know your angles?</p>
 
-            {challenge && (
-              <div className="challenge-banner" data-animate>
-                ⚔️ <b>CHALLENGE #{encodeSeed(challenge.seed)}</b> — you'll play the exact same {ROUNDS} angles
-                as your rival on <b>{MODES[challenge.mode].label}</b>. Beat their score!
-                <button className="banner-leave" onClick={leaveChallenge}>✕ leave challenge &amp; play freely</button>
-              </div>
-            )}
-
             <figure className="demo" data-animate>
               <DemoDial />
               <figcaption className="demo-caption">
@@ -332,8 +333,6 @@ export default function App() {
                       className={`seg-btn ${players === id ? 'seg-btn-active' : ''}`}
                       onClick={() => selectPlayers(id)}
                       aria-pressed={players === id}
-                      disabled={!!challenge}
-                      title={challenge ? 'Locked by the challenge' : undefined}
                     >
                       {label}
                     </button>
@@ -349,8 +348,6 @@ export default function App() {
                       className={`seg-btn ${mode === m.id ? 'seg-btn-active' : ''}`}
                       onClick={() => selectMode(m.id)}
                       aria-pressed={mode === m.id}
-                      disabled={!!challenge}
-                      title={challenge ? 'Locked by the challenge' : undefined}
                     >
                       {m.label}
                     </button>
@@ -371,14 +368,31 @@ export default function App() {
           </section>
         )}
 
+        {phase === 'challenge' && challenge && (
+          <section className="screen challenge-screen">
+            <div className="chal-badge" data-animate>⚔️</div>
+            <h1 className="chal-title" data-animate>YOU'VE BEEN CHALLENGED</h1>
+            <p className="chal-sub" data-animate>
+              Your rival picked <b>{ROUNDS} secret angles</b> on <b>{MODES[challenge.mode].label}</b>.
+              You both play the exact same game — beat their score to take the board.
+            </p>
+            <button className="btn btn-primary" data-animate onClick={startGame}>
+              START CHALLENGE
+            </button>
+            <button className="btn btn-lock btn-view" data-animate onClick={viewChallengeBoard}>
+              VIEW LEADERBOARD
+            </button>
+            <button className="btn-ghost" data-animate onClick={exitChallenge}>
+              no thanks — take me to the game
+            </button>
+          </section>
+        )}
+
         {phase === 'intro' && (
           <section className="screen intro-screen">
             <div className="round-flash" data-animate>
               <span className="round-label">ROUND</span>
               <span className="round-number">{round + 1}</span>
-              {players === 'multi' && seed !== null && (
-                <span className="round-chal">⚔ CHALLENGE #{encodeSeed(seed)}</span>
-              )}
             </div>
           </section>
         )}
@@ -516,7 +530,7 @@ export default function App() {
           <section className="screen board-screen">
             <p className="results-kicker" data-animate>LEADERBOARD</p>
             <div className="board-sub" data-animate>
-              challenge <span className="board-seed">#{encodeSeed(seed ?? 0)}</span> · {MODES[mode].label}
+              {challenge ? 'FRIEND CHALLENGE' : 'YOUR CHALLENGE'} · {MODES[mode].label}
             </div>
 
             {board?.local && (
@@ -548,18 +562,26 @@ export default function App() {
               </p>
             )}
 
-            <div className="share-row" data-animate>
-              <button className="btn btn-primary btn-share" onClick={copyChallenge}>
-                {copied ? '✓ LINK COPIED!' : '⚔️ CHALLENGE A FRIEND'}
+            {challenge && results.length === 0 ? (
+              // arrived from a challenge link without playing yet
+              <button className="btn btn-primary" data-animate onClick={startGame}>
+                START CHALLENGE
               </button>
-              <button className="btn btn-lock btn-again" onClick={playAgain}>
-                PLAY AGAIN
-              </button>
-            </div>
-            <p className="share-hint" data-animate>
-              The link replays your exact {ROUNDS} angles — winner takes the board.
-            </p>
-            <div className="share-url" data-animate aria-label="Challenge link">{shareUrl}</div>
+            ) : (
+              <>
+                <div className="share-row" data-animate>
+                  <button className="btn btn-primary btn-share" onClick={copyChallenge}>
+                    {copied ? '✓ LINK COPIED!' : '⚔️ CHALLENGE A FRIEND'}
+                  </button>
+                  <button className="btn btn-lock btn-again" onClick={playAgain}>
+                    PLAY AGAIN
+                  </button>
+                </div>
+                <p className="share-hint" data-animate>
+                  The link replays your exact {ROUNDS} angles — winner takes the board.
+                </p>
+              </>
+            )}
           </section>
         )}
       </main>
