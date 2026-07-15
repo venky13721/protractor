@@ -31,6 +31,7 @@ export default function App() {
   const [muted, setMutedState] = useState(isMuted())
   const [challenge, setChallenge] = useState(parseChallenge)
   const [mode, setMode] = useState(challenge ? challenge.mode : DEFAULT_MODE)
+  const [players, setPlayers] = useState(challenge ? 'multi' : 'single') // single | multi
   const [paused, setPaused] = useState(false)
   const [seed, setSeed] = useState(null)
   const [name, setName] = useState(() => localStorage.getItem('protractor-name') || '')
@@ -77,17 +78,29 @@ export default function App() {
     setPhase('play')
   }, [setGuessLive, plan, round, mode])
 
+  const dropChallenge = () => {
+    if (!challenge) return
+    setChallenge(null)
+    window.history.replaceState(null, '', window.location.pathname)
+  }
+
   // Pick a difficulty on the menu; announce it with the robotic voice on change.
   // Switching modes abandons an accepted challenge — its seed is mode-specific.
   const selectMode = (id) => {
     if (id === mode) return
     setMode(id)
-    if (challenge) {
-      setChallenge(null)
-      window.history.replaceState(null, '', window.location.pathname)
-    }
+    dropChallenge()
     sfx.click()
     playVoice(MODES[id].voice)
+  }
+
+  // Single skips the leaderboard flow; a challenge is inherently multi,
+  // so toggling back to single abandons it.
+  const selectPlayers = (p) => {
+    if (p === players) return
+    setPlayers(p)
+    if (p === 'single') dropChallenge()
+    sfx.click()
   }
 
   const lockIn = useCallback(() => {
@@ -289,18 +302,44 @@ export default function App() {
               </figcaption>
             </figure>
 
-            <div className="mode-select" data-animate role="group" aria-label="Difficulty">
-              {Object.values(MODES).map((m) => (
-                <button
-                  key={m.id}
-                  className={`mode-pill ${mode === m.id ? 'mode-pill-active' : ''}`}
-                  onClick={() => selectMode(m.id)}
-                  aria-pressed={mode === m.id}
-                >
-                  {m.label}
-                </button>
-              ))}
+            <div className="toggle-row" data-animate>
+              <div className="toggle-group" role="group" aria-label="Players">
+                <span className="toggle-label">PLAYERS</span>
+                <div className="seg">
+                  {[['single', 'SINGLE'], ['multi', 'MULTI']].map(([id, label]) => (
+                    <button
+                      key={id}
+                      className={`seg-btn ${players === id ? 'seg-btn-active' : ''}`}
+                      onClick={() => selectPlayers(id)}
+                      aria-pressed={players === id}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="toggle-group" role="group" aria-label="Difficulty">
+                <span className="toggle-label">DIFFICULTY</span>
+                <div className="seg">
+                  {Object.values(MODES).map((m) => (
+                    <button
+                      key={m.id}
+                      className={`seg-btn ${mode === m.id ? 'seg-btn-active' : ''}`}
+                      onClick={() => selectMode(m.id)}
+                      aria-pressed={mode === m.id}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
+
+            {players === 'multi' && !challenge && (
+              <p className="multi-hint" data-animate>
+                Finish a run to join the leaderboard and challenge friends to your exact angles.
+              </p>
+            )}
 
             <button className="btn btn-primary" data-animate onClick={startGame}>
               START GAME
@@ -413,28 +452,36 @@ export default function App() {
               ))}
             </div>
 
-            <form
-              className="lb-join"
-              data-animate
-              onSubmit={(e) => { e.preventDefault(); if (playerName) goToBoard(true) }}
-            >
-              <input
-                className="name-input"
-                type="text"
-                value={name}
-                maxLength={MAX_NAME}
-                placeholder="YOUR NAME"
-                aria-label="Your name for the leaderboard"
-                onChange={(e) => setName(e.target.value)}
-              />
-              <button className="btn btn-primary btn-join" type="submit" disabled={!playerName}>
-                JOIN LEADERBOARD
-              </button>
-            </form>
+            {players === 'multi' ? (
+              <>
+                <form
+                  className="lb-join"
+                  data-animate
+                  onSubmit={(e) => { e.preventDefault(); if (playerName) goToBoard(true) }}
+                >
+                  <input
+                    className="name-input"
+                    type="text"
+                    value={name}
+                    maxLength={MAX_NAME}
+                    placeholder="YOUR NAME"
+                    aria-label="Your name for the leaderboard"
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                  <button className="btn btn-primary btn-join" type="submit" disabled={!playerName}>
+                    JOIN LEADERBOARD
+                  </button>
+                </form>
 
-            <button className="btn-ghost" data-animate onClick={() => goToBoard(false)}>
-              skip → just show the board
-            </button>
+                <button className="btn-ghost" data-animate onClick={() => goToBoard(false)}>
+                  skip → just show the board
+                </button>
+              </>
+            ) : (
+              <button className="btn btn-primary" data-animate onClick={playAgain}>
+                PLAY AGAIN
+              </button>
+            )}
           </section>
         )}
 

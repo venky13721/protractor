@@ -110,7 +110,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 22px;
+  padding: calc(16px + env(safe-area-inset-top)) calc(22px + env(safe-area-inset-right)) 16px calc(22px + env(safe-area-inset-left));
 }
 
 .logo {
@@ -149,10 +149,11 @@ body {
   z-index: 5;
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 18px 24px;
+  padding: 0 calc(18px + env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-right));
   min-height: 0;
+  /* tall screens (menu, results, board) scroll instead of clipping on phones */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .screen {
@@ -162,7 +163,9 @@ body {
   gap: 22px;
   width: 100%;
   max-width: 660px;
-  max-height: 100%;
+  /* centered while it fits, scrollable from the top once it doesn't */
+  margin: auto;
+  padding: 10px 0;
 }
 
 /* menu */
@@ -365,27 +368,54 @@ body {
   z-index: 6;
 }
 
-/* difficulty mode selector on the menu */
-.mode-select { display: flex; gap: 10px; }
+/* menu toggles: players (single/multi) + difficulty, as compact segments */
+.toggle-row {
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+}
 
-.mode-pill {
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  font-size: 0.8rem;
-  padding: 9px 18px;
-  border-radius: 999px;
-  cursor: pointer;
-  color: var(--ink-dim);
+.toggle-group { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+
+.toggle-label { font-size: 0.6rem; letter-spacing: 0.32em; color: var(--ink-dim); }
+
+.seg {
+  display: flex;
+  gap: 2px;
   background: var(--card);
   border: 1px solid var(--border);
-  transition: transform 0.15s, color 0.15s, box-shadow 0.15s, border-color 0.15s;
+  border-radius: 999px;
+  padding: 3px;
+  backdrop-filter: blur(10px);
 }
-.mode-pill:hover { transform: translateY(-1px); color: var(--ink); }
-.mode-pill-active {
+
+.seg-btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.seg-btn:hover { color: var(--ink); }
+.seg-btn-active {
+  background: rgba(61, 169, 255, 0.16);
   color: var(--cyan);
-  border-color: var(--cyan);
-  box-shadow: 0 0 16px rgba(61, 169, 255, 0.35);
+  box-shadow: 0 0 12px rgba(61, 169, 255, 0.25) inset, 0 0 10px rgba(61, 169, 255, 0.15);
+}
+
+.multi-hint {
+  color: var(--ink-dim);
+  font-size: 0.82rem;
+  text-align: center;
+  max-width: 420px;
 }
 
 .ring-urgent { animation: ringFlash 0.4s infinite alternate; }
@@ -646,4 +676,44 @@ body {
   .demo { padding: 12px 12px 14px; gap: 8px; }
   .demo-dial { width: min(38vmin, 200px); }
   .demo-caption { font-size: 0.82rem; }
+}
+
+/* phones (narrow portrait) */
+@media (max-width: 520px) {
+  .screen { gap: 15px; }
+  .topbar { padding-left: calc(14px + env(safe-area-inset-left)); padding-right: calc(14px + env(safe-area-inset-right)); }
+  .stage { padding-left: calc(14px + env(safe-area-inset-left)); padding-right: calc(14px + env(safe-area-inset-right)); }
+
+  /* the dial is the game — let it own the width */
+  .dial-wrap { width: min(80vw, 340px); }
+  .reveal-screen .dial-wrap { width: min(56vw, 250px); }
+
+  .demo { padding: 12px 12px 14px; gap: 8px; }
+  .demo-dial { width: min(50vw, 200px); }
+  .demo-caption { font-size: 0.8rem; }
+
+  .toggle-row { gap: 12px; }
+  .seg-btn { font-size: 0.66rem; padding: 10px 12px; } /* taller tap targets */
+
+  /* full-width thumb-sized primary actions */
+  .btn-lock { width: 100%; max-width: 340px; padding: 17px 0; }
+  .btn-primary { padding: 16px 38px; }
+
+  .reveal-stats { gap: 8px; }
+  .stat { padding: 10px 12px; min-width: 74px; }
+  .stat-value { font-size: 1.2rem; }
+
+  .breakdown { padding: 12px 12px; gap: 8px; }
+  .breakdown-row { grid-template-columns: 26px 1fr 64px 44px; gap: 7px; font-size: 0.78rem; }
+
+  .challenge-banner { font-size: 0.84rem; padding: 10px 14px; }
+  .multi-hint { font-size: 0.78rem; }
+
+  .lb-join { width: 100%; max-width: 340px; }
+  .name-input { flex: 1; min-width: 0; width: auto; }
+  .btn-join { white-space: nowrap; }
+
+  .board { max-height: 44vh; }
+  .share-row { width: 100%; max-width: 340px; flex-direction: column; align-items: stretch; }
+  .btn-share, .btn-again { width: 100%; padding: 15px 0; }
 }
