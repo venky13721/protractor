@@ -6,6 +6,7 @@ import ClickSpark from './components/ClickSpark.jsx'
 import CountUp from './components/CountUp.jsx'
 import Confetti from './components/Confetti.jsx'
 import AngleDial from './components/AngleDial.jsx'
+import DemoDial from './components/DemoDial.jsx'
 import { ROUNDS, ROUND_TIME, MODES, DEFAULT_MODE, angularError, rankFor, roundScore, roundVerdict, gamePlan, randomSeed, encodeSeed, decodeSeed } from './logic.js'
 import { submitScore, fetchBoard, cleanName, MAX_NAME } from './leaderboard.js'
 import { sfx, unlock, setMuted, isMuted, playVoice } from './audio.js'
@@ -282,15 +283,9 @@ export default function App() {
             )}
 
             <figure className="demo" data-animate>
-              <img
-                className="demo-gif"
-                src="/demo.gif"
-                width="520"
-                height="500"
-                alt="Demo: an angle is named, then you drag the yellow arrow counter-clockwise from the green arrow until the gap feels right, before time runs out."
-              />
+              <DemoDial />
               <figcaption className="demo-caption">
-                Drag the <span className="pink">yellow arrow</span> counter-clockwise from the <span className="cyan">green arrow</span> until the gap <em>feels</em> right — no ticks, no numbers, {roundTime}s × {ROUNDS} rounds.
+                Drag the <span className="pink">orange arrow</span> counter-clockwise from the <span className="cyan">blue arrow</span> until the gap <em>feels</em> right — no ticks, no numbers, {roundTime}s × {ROUNDS} rounds.
               </figcaption>
             </figure>
 
@@ -368,8 +363,8 @@ export default function App() {
 
             <div className="reveal-stats" data-animate>
               <div className="stat">
-                <span className="stat-label gold">TARGET</span>
-                <span className="stat-value gold">{lastResult.target}°</span>
+                <span className="stat-label target-c">TARGET</span>
+                <span className="stat-value target-c">{lastResult.target}°</span>
               </div>
               <div className="stat">
                 <span className="stat-label pink">YOU</span>

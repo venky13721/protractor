@@ -2,12 +2,12 @@
 
 **How well do you *really* know your angles?**
 
-A fast, flashy angle-guessing game. Each round you're given a number — say **270°** — and all you get is two arrows around a shared vertex. No ticks, no numbers, no protractor. Drag the **yellow** arrow until the angle between it and the **green** arrow *feels* right, before the timer runs out.
+A fast, flashy angle-guessing game. Each round you're given a number — say **270°** — and all you get is two arrows around a shared vertex. No ticks, no numbers, no protractor. Drag the **orange** arrow until the angle between it and the **blue** arrow *feels* right, before the timer runs out.
 
 ## How it works
 
 - **5 rounds**, timer depends on difficulty (see modes below)
-- The target angle is measured **counter-clockwise** from the green arrow to your yellow arrow (so reflex angles like 270° are in play)
+- The target angle is measured **counter-clockwise** from the blue arrow to your orange arrow (so reflex angles like 270° are in play)
 - Each round scores up to **10.00** points; an exact guess is a perfect 10.00 and the score decays exponentially, reaching **0 at 90° off** (see scoring below)
 - Get a final rank, from **Blindfolded Builder** all the way to **Protractor Prodigy**
 
@@ -40,7 +40,7 @@ Everything in Phase 1 is client-side. The tunable knobs live at the top of
 [`src/logic.js`](src/logic.js) so you can change them and redeploy.
 
 - **Difficulty modes** — pick on the menu; a robotic voice announces the mode on switch:
-  - **EASY** — the green arrow is pinned to the +x axis (a fixed frame of reference); same timer.
+  - **EASY** — the blue arrow is pinned to the +x axis (a fixed frame of reference); same timer.
   - **HARD** — the classic game: the dial spins to a random orientation every round.
   - **ULTRA** — Hard, but with a shorter timer.
 - **Rebalanced scoring** — exactly `10.00` for a perfect guess, exponential decay, and exactly `0` once you're ≥ 90° off. Tunable via `SCORE_ZERO_DEG` / `SCORE_DECAY`.
@@ -48,7 +48,13 @@ Everything in Phase 1 is client-side. The tunable knobs live at the top of
 - **Readable timer** — the seconds readout moved out from under the ring into its own pill below the dial.
 - **Gentler drag ticks** — the drag "tick" is now a soft low tone, fired on a wider notch (10°) with a time throttle so fast drags don't machine-gun.
 - **Mobile glow fix** — the dial face is clipped (`border-radius:50%; overflow:hidden`) so the arrow glow can't bleed over the UI above it.
-- **Neon reskin** — neon green (fixed arrow) + neon yellow (your arrow), gold target kept for contrast.
+- **Colorblind-safe palette** — azure blue (fixed arrow) vs vivid orange (your arrow), a pair
+  that stays distinguishable under protanopia, deuteranopia and tritanopia; the reveal target
+  is white. The arrows also differ by shape (hollow vs solid head), so color is never the
+  only cue. Gold survives as a decorative accent (ranks, confetti).
+- **Live menu demo** — the landing page plays a small self-running demo dial (names an
+  angle, sweeps, reveals) instead of a pre-rendered GIF, so it always matches the current
+  palette.
 
 ### Tunable constants (`src/logic.js`)
 
@@ -60,7 +66,7 @@ export const MODES = {
 }
 export const DEFAULT_MODE = 'hard'
 
-export const COLORS = { green:'#39FF14', yellow:'#F2FF1A', gold:'#ffd166', /* … */ }
+export const COLORS = { fixed:'#3DA9FF', you:'#FF9F1C', target:'#FFFFFF', /* … */ }
 
 export const SCORE_MAX = 10      // perfect-round score
 export const SCORE_ZERO_DEG = 90 // error (deg) at/after which a round scores 0

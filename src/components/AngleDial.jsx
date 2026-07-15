@@ -33,19 +33,29 @@ function arcLength(sweep, r) {
   return (2 * Math.PI * r * Math.min(Math.max(sweep, 0.01), 359.9)) / 360
 }
 
-function Arrow({ deg, color, ghost = false }) {
+// `hollow` gives the fixed arrow an outlined head, so the two live arrows
+// differ by shape as well as color (never color alone — CVD safety).
+function Arrow({ deg, color, ghost = false, hollow = false }) {
   const [tx, ty] = pt(deg, RAY)
   return (
     <g style={{ filter: ghost ? 'none' : `drop-shadow(0 0 8px ${color})` }} opacity={ghost ? 0.85 : 1}>
-      <line x1={CX} y1={CY} x2={tx} y2={ty} stroke={color} strokeWidth={ghost ? 3 : 5} strokeLinecap="round" strokeDasharray={ghost ? '7 7' : 'none'} />
-      <path d="M6,0 L-16,9 L-10,0 L-16,-9 Z" fill={color} transform={`translate(${tx} ${ty}) rotate(${-deg})`} />
+      <line x1={CX} y1={CY} x2={tx} y2={ty} stroke={color} strokeWidth={ghost ? 3 : hollow ? 4 : 5} strokeLinecap="round" strokeDasharray={ghost ? '7 7' : 'none'} />
+      <path
+        d="M6,0 L-16,9 L-10,0 L-16,-9 Z"
+        fill={hollow ? 'none' : color}
+        stroke={hollow ? color : 'none'}
+        strokeWidth={hollow ? 2.5 : 0}
+        strokeLinejoin="round"
+        transform={`translate(${tx} ${ty}) rotate(${-deg})`}
+      />
     </g>
   )
 }
 
 /**
- * The dial. Two arrows around a shared vertex — one fixed (cyan),
- * one the player drags (pink). No ticks, no numbers, no mercy.
+ * The dial. Two arrows around a shared vertex — one fixed (blue, hollow
+ * head), one the player drags (orange, solid head). No ticks, no numbers,
+ * no mercy.
  *
  * props:
  *  base        fixed arrow direction (visual degrees)
@@ -115,7 +125,7 @@ export default function AngleDial({ base, guess, onChange, interactive, reveal, 
   const ringLen = 2 * Math.PI * RING
   const frac = Math.min(Math.max(timeFrac ?? 1, 0), 1)
   const urgent = frac < 0.3
-  const ringColor = urgent ? '#ff4d6d' : frac < 0.6 ? '#ffb347' : COLORS.green
+  const ringColor = urgent ? '#ff4d6d' : frac < 0.6 ? COLORS.gold : COLORS.fixed
   const moveDeg = base + guess
 
   return (
@@ -148,20 +158,20 @@ export default function AngleDial({ base, guess, onChange, interactive, reveal, 
         />
       )}
 
-      {/* reveal arcs: gold = the target, pink = the guess */}
+      {/* reveal arcs: white = the target, orange = the guess */}
       {reveal && (
         <g fill="none">
-          <path ref={targetArcRef} d={arcPath(base, reveal.target, ARC_TARGET)} stroke={COLORS.gold} strokeWidth="6" strokeLinecap="round" opacity="0" style={{ filter: `drop-shadow(0 0 8px ${COLORS.gold})` }} />
-          <path ref={guessArcRef} d={arcPath(base, guess, ARC_GUESS)} stroke={COLORS.yellow} strokeWidth="6" strokeLinecap="round" opacity="0" style={{ filter: `drop-shadow(0 0 8px ${COLORS.yellow})` }} />
+          <path ref={targetArcRef} d={arcPath(base, reveal.target, ARC_TARGET)} stroke={COLORS.target} strokeWidth="6" strokeLinecap="round" opacity="0" style={{ filter: `drop-shadow(0 0 8px ${COLORS.target})` }} />
+          <path ref={guessArcRef} d={arcPath(base, guess, ARC_GUESS)} stroke={COLORS.you} strokeWidth="6" strokeLinecap="round" opacity="0" style={{ filter: `drop-shadow(0 0 8px ${COLORS.you})` }} />
         </g>
       )}
 
-      {/* the ghost arrow marking where the target actually was */}
-      {reveal && <Arrow deg={base + reveal.target} color={COLORS.gold} ghost />}
+      {/* the ghost (dashed) arrow marking where the target actually was */}
+      {reveal && <Arrow deg={base + reveal.target} color={COLORS.target} ghost />}
 
-      {/* fixed (green) + movable (yellow) arrows */}
-      <Arrow deg={base} color={COLORS.green} />
-      <Arrow deg={moveDeg} color={COLORS.yellow} />
+      {/* fixed (blue, hollow head) + movable (orange, solid head) arrows */}
+      <Arrow deg={base} color={COLORS.fixed} hollow />
+      <Arrow deg={moveDeg} color={COLORS.you} />
 
       {/* hub */}
       <circle cx={CX} cy={CY} r="10" fill="#0b1024" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />

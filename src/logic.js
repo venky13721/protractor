@@ -5,7 +5,7 @@ export const ROUND_TIME = 7 // default seconds to lock in a guess (per-mode over
 
 // ---- Tunable config (change these and redeploy) -------------------------
 
-// Difficulty modes. `time` = seconds per round, `fixedBase` pins the green
+// Difficulty modes. `time` = seconds per round, `fixedBase` pins the blue
 // arrow to the +x axis (easy frame of reference), `voice` = mode-announce clip.
 //
 // Voices are robotic TTS generated with Higgsfield. They currently point at the
@@ -24,13 +24,17 @@ export const MODES = {
 }
 export const DEFAULT_MODE = 'hard'
 
-// Dial / effect colors. Fixed arrow = green, your movable arrow = yellow.
+// Dial / effect colors — a colorblind-safe palette. Blue vs orange stays
+// distinguishable under protanopia, deuteranopia and tritanopia (the old
+// green vs yellow pair collapsed for red-green CVD), and the reveal target
+// is white, which no CVD type confuses with either arrow. The arrows also
+// differ by shape (hollow vs solid head), so color is never the only cue.
 export const COLORS = {
-  green:  '#39FF14', // fixed arrow (was cyan)
-  yellow: '#F2FF1A', // your arrow (was pink)
-  gold:   '#ffd166', // reveal target
-  violet: '#a78bfa',
-  blue:   '#60a5fa',
+  fixed:  '#3DA9FF', // fixed reference arrow (azure blue)
+  you:    '#FF9F1C', // your movable arrow (vivid orange)
+  target: '#FFFFFF', // reveal target (white)
+  gold:   '#ffd166', // decorative only: ranks, confetti
+  violet: '#a78bfa', // decorative only: aurora, confetti
 }
 
 // Scoring curve.

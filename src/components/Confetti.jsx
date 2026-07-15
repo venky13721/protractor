@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { COLORS as THEME } from '../logic.js'
 
-const COLORS = [THEME.green, THEME.yellow, THEME.gold, THEME.violet, THEME.blue]
+const COLORS = [THEME.fixed, THEME.you, THEME.gold, THEME.violet, THEME.target]
 
 // One-shot confetti burst rendered with plain divs + GSAP physics.
 export default function Confetti({ count = 90 }) {
