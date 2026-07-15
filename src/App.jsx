@@ -84,22 +84,26 @@ export default function App() {
     window.history.replaceState(null, '', window.location.pathname)
   }
 
-  // Pick a difficulty on the menu; announce it with the robotic voice on change.
-  // Switching modes abandons an accepted challenge — its seed is mode-specific.
-  const selectMode = (id) => {
-    if (id === mode) return
-    setMode(id)
+  // While a challenge is active both toggles are locked — the seed is tied
+  // to the mode, and a stray tap must not silently turn the challenge into
+  // a random game. Leaving is explicit, via the banner's ✕.
+  const leaveChallenge = () => {
+    sfx.click()
     dropChallenge()
+  }
+
+  // Pick a difficulty on the menu; announce it with the robotic voice on change.
+  const selectMode = (id) => {
+    if (id === mode || challenge) return
+    setMode(id)
     sfx.click()
     playVoice(MODES[id].voice)
   }
 
-  // Single skips the leaderboard flow; a challenge is inherently multi,
-  // so toggling back to single abandons it.
+  // Single skips the leaderboard flow.
   const selectPlayers = (p) => {
-    if (p === players) return
+    if (p === players || challenge) return
     setPlayers(p)
-    if (p === 'single') dropChallenge()
     sfx.click()
   }
 
@@ -215,6 +219,21 @@ export default function App() {
 
   const copyChallenge = async () => {
     sfx.click()
+    // Phones: the native share sheet is far more reliable than the clipboard
+    // (and sends the link straight into a chat). Desktop: copy.
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'PROTRACTOR challenge',
+          text: `Beat my score — same ${ROUNDS} angles, no excuses.`,
+          url: shareUrl,
+        })
+        return
+      } catch (err) {
+        if (err.name === 'AbortError') return // user closed the sheet
+        // NotAllowedError etc — fall through to the clipboard
+      }
+    }
     try {
       await navigator.clipboard.writeText(shareUrl)
     } catch {
@@ -290,8 +309,9 @@ export default function App() {
 
             {challenge && (
               <div className="challenge-banner" data-animate>
-                ⚔️ <b>CHALLENGE ACCEPTED</b> — you'll play the exact same {ROUNDS} angles as your rival
-                on <b>{MODES[challenge.mode].label}</b>. Beat their score!
+                ⚔️ <b>CHALLENGE #{encodeSeed(challenge.seed)}</b> — you'll play the exact same {ROUNDS} angles
+                as your rival on <b>{MODES[challenge.mode].label}</b>. Beat their score!
+                <button className="banner-leave" onClick={leaveChallenge}>✕ leave challenge &amp; play freely</button>
               </div>
             )}
 
@@ -312,6 +332,8 @@ export default function App() {
                       className={`seg-btn ${players === id ? 'seg-btn-active' : ''}`}
                       onClick={() => selectPlayers(id)}
                       aria-pressed={players === id}
+                      disabled={!!challenge}
+                      title={challenge ? 'Locked by the challenge' : undefined}
                     >
                       {label}
                     </button>
@@ -327,6 +349,8 @@ export default function App() {
                       className={`seg-btn ${mode === m.id ? 'seg-btn-active' : ''}`}
                       onClick={() => selectMode(m.id)}
                       aria-pressed={mode === m.id}
+                      disabled={!!challenge}
+                      title={challenge ? 'Locked by the challenge' : undefined}
                     >
                       {m.label}
                     </button>
@@ -352,6 +376,9 @@ export default function App() {
             <div className="round-flash" data-animate>
               <span className="round-label">ROUND</span>
               <span className="round-number">{round + 1}</span>
+              {players === 'multi' && seed !== null && (
+                <span className="round-chal">⚔ CHALLENGE #{encodeSeed(seed)}</span>
+              )}
             </div>
           </section>
         )}
@@ -490,8 +517,13 @@ export default function App() {
             <p className="results-kicker" data-animate>LEADERBOARD</p>
             <div className="board-sub" data-animate>
               challenge <span className="board-seed">#{encodeSeed(seed ?? 0)}</span> · {MODES[mode].label}
-              {board?.local && <span className="board-local"> · this device only</span>}
             </div>
+
+            {board?.local && (
+              <div className="board-offline" data-animate>
+                ⚠️ Shared leaderboard unreachable — this board only shows scores from this device.
+              </div>
+            )}
 
             <div className="board" data-animate>
               {!board && <div className="board-empty">loading…</div>}
@@ -527,6 +559,7 @@ export default function App() {
             <p className="share-hint" data-animate>
               The link replays your exact {ROUNDS} angles — winner takes the board.
             </p>
+            <div className="share-url" data-animate aria-label="Challenge link">{shareUrl}</div>
           </section>
         )}
       </main>
