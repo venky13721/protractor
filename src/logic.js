@@ -5,7 +5,7 @@ export const ROUND_TIME = 7 // default seconds to lock in a guess (per-mode over
 
 // ---- Tunable config (change these and redeploy) -------------------------
 
-// Difficulty modes. `time` = seconds per round, `fixedBase` pins the green
+// Difficulty modes. `time` = seconds per round, `fixedBase` pins the blue
 // arrow to the +x axis (easy frame of reference), `voice` = mode-announce clip.
 //
 // Voices are robotic TTS generated with Higgsfield. They currently point at the
@@ -24,13 +24,17 @@ export const MODES = {
 }
 export const DEFAULT_MODE = 'hard'
 
-// Dial / effect colors. Fixed arrow = green, your movable arrow = yellow.
+// Dial / effect colors — a colorblind-safe palette. Blue vs orange stays
+// distinguishable under protanopia, deuteranopia and tritanopia (the old
+// green vs yellow pair collapsed for red-green CVD), and the reveal target
+// is white, which no CVD type confuses with either arrow. The arrows also
+// differ by shape (hollow vs solid head), so color is never the only cue.
 export const COLORS = {
-  green:  '#39FF14', // fixed arrow (was cyan)
-  yellow: '#F2FF1A', // your arrow (was pink)
-  gold:   '#ffd166', // reveal target
-  violet: '#a78bfa',
-  blue:   '#60a5fa',
+  fixed:  '#3DA9FF', // fixed reference arrow (azure blue)
+  you:    '#FF9F1C', // your movable arrow (vivid orange)
+  target: '#FFFFFF', // reveal target (white)
+  gold:   '#ffd166', // decorative only: ranks, confetti
+  violet: '#a78bfa', // decorative only: aurora, confetti
 }
 
 // Scoring curve.
@@ -40,14 +44,47 @@ export const SCORE_DECAY = 20    // exponential steepness (deg)
 
 // ------------------------------------------------------------------------
 
-// Random target angle for a round. Avoid trivial extremes (0/360)
-// and keep the whole circle in play so reflex angles show up too.
-export function randomTarget() {
-  return 10 + Math.floor(Math.random() * 341) // 10..350
+// ---- Seeded games (multiplayer challenges) ------------------------------
+// Every game is derived from a 32-bit seed: same seed + mode → the exact
+// same 5 targets, dial orientations and start positions. Sharing
+// `?c=<seed>&m=<mode>` lets a friend replay the identical game — no backend.
+
+export function randomSeed() {
+  return Math.floor(Math.random() * 0xffffffff) >>> 0
 }
 
-export function newTargets() {
-  return Array.from({ length: ROUNDS }, randomTarget)
+export const encodeSeed = (seed) => (seed >>> 0).toString(36)
+
+export function decodeSeed(str) {
+  if (!/^[0-9a-z]{1,7}$/.test(str || '')) return null
+  const n = parseInt(str, 36)
+  return n <= 0xffffffff ? n >>> 0 : null
+}
+
+// mulberry32 — tiny deterministic PRNG, returns floats in [0, 1).
+export function mulberry32(seed) {
+  let a = seed >>> 0
+  return function () {
+    a |= 0
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+// Deterministic plan for a whole game. Targets avoid trivial extremes
+// (10..350 keeps reflex angles in play); base spin and the arrow's start
+// position come from the same stream so replays are exact.
+export function gamePlan(seed, modeId) {
+  const rng = mulberry32(seed)
+  const { fixedBase } = MODES[modeId]
+  return Array.from({ length: ROUNDS }, () => {
+    const target = 10 + Math.floor(rng() * 341)
+    const spin = rng() * 360
+    const start = 25 + rng() * 310
+    return { target, base: fixedBase ? 0 : spin, start }
+  })
 }
 
 // Shortest circular distance between two angles, in degrees (0..180).

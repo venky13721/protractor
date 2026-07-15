@@ -3,7 +3,11 @@
 Living progress log for the Phase 1 game improvements. Updated after every step.
 Branch: `claude/game-improvements-multiplayer-jgvox8`. Plan approved by owner.
 
-_Phase 2 (multiplayer) is documentation-only in this pass; not implemented._
+_Phase 2 (multiplayer) was documentation-only in this pass. It has since been
+implemented on branch `claude/multiplayer-leaderboard-g9m4od` — seeded challenge
+URLs (`?c=<seed>&m=<mode>`), `/api/score` + `/api/leaderboard` Vercel functions
+backed by Upstash Redis (localStorage fallback), and a leaderboard end screen.
+See the Phase 2 section of README.md._
 
 ## Skills installed (session, user-level `~/.claude/skills/`)
 - **ponytail** (+ audit/review/debt/gain/help) — lazy-senior-dev, minimal code.

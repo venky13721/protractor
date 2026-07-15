@@ -2,10 +2,10 @@
   --bg: #05060f;
   --ink: #eef1ff;
   --ink-dim: rgba(238, 241, 255, 0.6);
-  /* neon reskin: --cyan now holds neon green (fixed arrow), --pink holds neon yellow (you).
-     Names kept to avoid churn across ~15 usages. */
-  --cyan: #39FF14;
-  --pink: #F2FF1A;
+  /* colorblind-safe palette: --cyan holds azure blue (fixed arrow), --pink holds
+     vivid orange (you). Var names kept to avoid churn across ~15 usages. */
+  --cyan: #3DA9FF;
+  --pink: #FF9F1C;
   --gold: #ffd166;
   --violet: #a78bfa;
   --card: rgba(16, 20, 42, 0.6);
@@ -54,9 +54,9 @@ body {
   will-change: transform;
 }
 
-.aurora-cyan   { background: radial-gradient(circle, rgba(57,255,20,0.42), transparent 65%); top: -18vmax; left: -12vmax; }
+.aurora-cyan   { background: radial-gradient(circle, rgba(61,169,255,0.42), transparent 65%); top: -18vmax; left: -12vmax; }
 .aurora-violet { background: radial-gradient(circle, rgba(167,139,250,0.45), transparent 65%); bottom: -20vmax; right: -14vmax; }
-.aurora-pink   { background: radial-gradient(circle, rgba(242,255,26,0.28), transparent 65%); top: 30%; left: 45%; }
+.aurora-pink   { background: radial-gradient(circle, rgba(255,159,28,0.28), transparent 65%); top: 30%; left: 45%; }
 
 .aurora-grid {
   position: absolute;
@@ -197,14 +197,32 @@ body {
   width: 100%;
 }
 
-.demo-gif {
-  display: block;
-  width: 100%;
-  max-width: 420px;
-  height: auto;
-  border-radius: 14px;
-  aspect-ratio: 520 / 500;
+/* self-playing demo dial (replaces the old GIF) */
+.demo-dial {
+  position: relative;
+  width: min(44vmin, 260px);
+  aspect-ratio: 1;
 }
+.demo-dial .dial { width: 100%; height: 100%; }
+
+.demo-callout {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+  background: rgba(5, 6, 15, 0.72);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  white-space: nowrap;
+}
+.demo-callout b { color: var(--gold); }
 
 .demo-caption {
   color: var(--ink-dim);
@@ -235,19 +253,19 @@ body {
   padding: 16px 44px;
   font-size: 1rem;
   color: #06121a;
-  background: linear-gradient(120deg, var(--cyan), #b6ff9c);
-  box-shadow: 0 0 24px rgba(57, 255, 20, 0.45), 0 4px 18px rgba(0,0,0,0.4);
+  background: linear-gradient(120deg, var(--cyan), #8fd0ff);
+  box-shadow: 0 0 24px rgba(61, 169, 255, 0.45), 0 4px 18px rgba(0,0,0,0.4);
 }
 
-.btn-primary:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 0 36px rgba(57, 255, 20, 0.65), 0 6px 22px rgba(0,0,0,0.4); }
+.btn-primary:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 0 36px rgba(61, 169, 255, 0.65), 0 6px 22px rgba(0,0,0,0.4); }
 .btn-primary:active { transform: scale(0.97); }
 
 .btn-lock {
-  background: linear-gradient(120deg, var(--pink), #fbff8a);
-  color: #2a2600;
-  box-shadow: 0 0 24px rgba(242, 255, 26, 0.4), 0 4px 18px rgba(0,0,0,0.4);
+  background: linear-gradient(120deg, var(--pink), #ffc46b);
+  color: #2b1600;
+  box-shadow: 0 0 24px rgba(255, 159, 28, 0.4), 0 4px 18px rgba(0,0,0,0.4);
 }
-.btn-lock:hover { box-shadow: 0 0 36px rgba(242, 255, 26, 0.6), 0 6px 22px rgba(0,0,0,0.4); }
+.btn-lock:hover { box-shadow: 0 0 36px rgba(255, 159, 28, 0.6), 0 6px 22px rgba(0,0,0,0.4); }
 
 /* intro flash */
 
@@ -271,7 +289,7 @@ body {
   font-size: clamp(5rem, 20vw, 10rem);
   line-height: 1;
   color: var(--ink);
-  text-shadow: 0 0 40px rgba(57, 255, 20, 0.55);
+  text-shadow: 0 0 40px rgba(61, 169, 255, 0.55);
 }
 
 /* play */
@@ -367,7 +385,7 @@ body {
 .mode-pill-active {
   color: var(--cyan);
   border-color: var(--cyan);
-  box-shadow: 0 0 16px rgba(57, 255, 20, 0.35);
+  box-shadow: 0 0 16px rgba(61, 169, 255, 0.35);
 }
 
 .ring-urgent { animation: ringFlash 0.4s infinite alternate; }
@@ -382,7 +400,7 @@ body {
   letter-spacing: 0.08em;
   color: var(--ink);
 }
-.verdict-good { color: var(--cyan); text-shadow: 0 0 28px rgba(57, 255, 20, 0.55); }
+.verdict-good { color: var(--cyan); text-shadow: 0 0 28px rgba(61, 169, 255, 0.55); }
 .verdict-bad { color: #ff4d6d; text-shadow: 0 0 28px rgba(255, 77, 109, 0.5); }
 
 .reveal-screen .dial-wrap { width: min(48vmin, 340px); }
@@ -410,6 +428,8 @@ body {
 .stat-label { font-size: 0.65rem; letter-spacing: 0.3em; color: var(--ink-dim); }
 .stat-label.gold { color: var(--gold); }
 .stat-label.pink { color: var(--pink); }
+/* the reveal target is white on the dial — keep its stat white too */
+.stat-label.target-c { color: var(--ink); }
 
 .stat-value {
   font-family: var(--font-display);
@@ -419,8 +439,9 @@ body {
 }
 .stat-value.gold { color: var(--gold); }
 .stat-value.pink { color: var(--pink); }
+.stat-value.target-c { color: #fff; text-shadow: 0 0 14px rgba(255, 255, 255, 0.45); }
 
-.stat-score { border-color: rgba(57, 255, 20, 0.4); box-shadow: 0 0 18px rgba(57, 255, 20, 0.15); }
+.stat-score { border-color: rgba(61, 169, 255, 0.4); box-shadow: 0 0 18px rgba(61, 169, 255, 0.15); }
 .stat-score .stat-value { color: var(--cyan); }
 .stat-denominator { font-size: 0.85rem; color: var(--ink-dim); margin-left: 3px; }
 
@@ -505,6 +526,117 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- multiplayer: challenge + leaderboard ---------- */
+
+/* menu banner shown when the page was opened from a ?c= challenge link */
+.challenge-banner {
+  max-width: 460px;
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink-dim);
+  background: var(--card);
+  border: 1px solid rgba(255, 159, 28, 0.45);
+  border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: 0 0 22px rgba(255, 159, 28, 0.18);
+  backdrop-filter: blur(10px);
+}
+.challenge-banner b { color: var(--pink); }
+
+/* name + join form on the results screen */
+.lb-join { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+.name-input {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 13px 22px;
+  width: 200px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.name-input::placeholder { color: var(--ink-dim); font-weight: 400; }
+.name-input:focus { border-color: var(--cyan); box-shadow: 0 0 16px rgba(61, 169, 255, 0.25); }
+
+.btn-join { padding: 13px 26px; font-size: 0.85rem; }
+.btn-join:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-ghost {
+  background: none;
+  border: none;
+  color: var(--ink-dim);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  transition: color 0.15s;
+}
+.btn-ghost:hover { color: var(--ink); }
+
+/* leaderboard screen */
+.board-sub {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+}
+.board-seed { color: var(--cyan); font-weight: 700; }
+.board-local { color: var(--gold); }
+
+.board {
+  width: 100%;
+  max-width: 420px;
+  max-height: 38vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px 16px;
+  backdrop-filter: blur(12px);
+}
+
+.board-empty { text-align: center; color: var(--ink-dim); font-size: 0.9rem; padding: 14px 0; }
+
+.board-row {
+  display: grid;
+  grid-template-columns: 38px 1fr 70px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  padding: 7px 10px;
+  border-radius: 10px;
+}
+.board-row:nth-child(-n + 3) .board-name { font-weight: 700; }
+
+.board-rank { color: var(--ink-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+.board-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-score { text-align: right; font-weight: 700; color: var(--cyan); font-variant-numeric: tabular-nums; }
+
+.board-row-you {
+  background: rgba(255, 159, 28, 0.08);
+  border: 1px solid rgba(255, 159, 28, 0.45);
+  box-shadow: 0 0 14px rgba(255, 159, 28, 0.15);
+}
+.board-row-you .board-name { color: var(--pink); font-weight: 700; }
+
+.board-yourank { color: var(--ink-dim); font-size: 0.95rem; }
+.board-yourank b { color: var(--pink); }
+
+.share-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.btn-share, .btn-again { padding: 14px 28px; font-size: 0.85rem; }
+
+.share-hint { color: var(--ink-dim); font-size: 0.82rem; text-align: center; }
+
 /* small screens */
 
 @media (max-height: 720px) {
@@ -512,6 +644,6 @@ body {
   .dial-wrap { width: min(54vmin, 360px); }
   .reveal-screen .dial-wrap { width: min(40vmin, 260px); }
   .demo { padding: 12px 12px 14px; gap: 8px; }
-  .demo-gif { max-width: 320px; }
+  .demo-dial { width: min(38vmin, 200px); }
   .demo-caption { font-size: 0.82rem; }
 }
