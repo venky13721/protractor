@@ -39,7 +39,10 @@ The repo ships a `vercel.json` that pins the framework to **Vite** (build comman
 Everything in Phase 1 is client-side. The tunable knobs live at the top of
 [`src/logic.js`](src/logic.js) so you can change them and redeploy.
 
-- **Difficulty modes** — pick on the menu; a robotic voice announces the mode on switch:
+- **Menu toggles** — two compact segmented controls: **PLAYERS** (SINGLE skips the
+  leaderboard flow and ends on Play Again; MULTI adds the name → leaderboard → challenge
+  flow, and is auto-selected when opening a challenge link) and **DIFFICULTY**.
+- **Difficulty modes** — a robotic voice announces the mode on switch:
   - **EASY** — the blue arrow is pinned to the +x axis (a fixed frame of reference); same timer.
   - **HARD** — the classic game: the dial spins to a random orientation every round.
   - **ULTRA** — Hard, but with a shorter timer.
