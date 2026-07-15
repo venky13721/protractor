@@ -2,17 +2,20 @@
 // are not deployed as endpoints by Vercel.
 //
 // Talks to Upstash Redis over its REST API with plain fetch — no npm
-// dependency. Requires UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
-// (set automatically when the Upstash integration is added on Vercel).
+// dependency. The env vars come from the Vercel integration: the classic
+// Upstash integration sets UPSTASH_REDIS_REST_*, while the newer
+// Marketplace "Upstash KV" resource sets KV_REST_API_*. Accept either.
 
-export const configured = () =>
-  Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+const restUrl = () => process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
+const restToken = () => process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
+
+export const configured = () => Boolean(restUrl() && restToken())
 
 export async function redis(cmd) {
-  const res = await fetch(process.env.UPSTASH_REDIS_REST_URL, {
+  const res = await fetch(restUrl(), {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+      Authorization: `Bearer ${restToken()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(cmd),

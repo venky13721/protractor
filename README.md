@@ -120,9 +120,11 @@ dependencies.
                     GET /api/leaderboard?seed=&mode=  ──► leaderboard screen (top 25, medals, your rank)
 ```
 
-**Setup (one-time):** add the Upstash Redis integration to the Vercel project (Vercel
-Marketplace → Upstash), which sets `UPSTASH_REDIS_REST_URL` and
-`UPSTASH_REDIS_REST_TOKEN` automatically. That's it — no extra dependencies.
+**Setup (one-time):** add an Upstash Redis/KV resource to the Vercel project (Vercel
+Marketplace → Upstash). The functions accept either env-var naming the integration
+uses — classic `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` or Marketplace KV
+`KV_REST_API_URL`/`KV_REST_API_TOKEN` — no extra dependencies. Redeploy once after
+connecting so the functions pick the vars up.
 
 **Graceful fallback:** without the env vars (or when running `vite dev`/`vite preview`,
 which don't serve `/api`), the leaderboard falls back to a per-device board in
